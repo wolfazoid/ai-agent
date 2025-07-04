@@ -1,22 +1,15 @@
-from functions.get_files_info import get_files_info
+from functions.get_file_content import get_file_content
 
-def test_calculator_path():
-    result = get_files_info("calculator", ".")
-    # print(result)
+def test():
 
-def test_pkg_path():
-    result = get_files_info("calculator", "pkg")
-    # print(result)
+    result = get_file_content("calculator", "main.py")
+    print(result)
 
-def test_bin_path():
-    result = get_files_info("calculator", "/bin")
-    # print(result)
+    result = get_file_content("calculator", "pkg/calculator.py")
+    print(result)
 
-def test_parent_path():
-    result = get_files_info("calculator", "../")
-    # print(result)
+    result = get_file_content("calculator", "/bin/cat")
+    print(result)
 
-test_calculator_path()
-test_pkg_path()
-test_bin_path()
-test_parent_path()
+if __name__ == "__main__":
+    test()
