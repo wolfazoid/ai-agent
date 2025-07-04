@@ -1,6 +1,8 @@
 import os
 
 def get_files_info(working_directory, directory=None):
+    abs_working_dir = os.path.abspath(working_directory)
+    print(f'Absolute Working Directory: {abs_working_dir}')
     full_path = os.path.join(working_directory, directory)
     # print(f'Troubleshooting standard functions')
     # print(f'Full Path: {full_path}')
