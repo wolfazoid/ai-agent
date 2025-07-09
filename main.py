@@ -3,8 +3,11 @@ import os
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from functions.run_python import run_python_file
 from functions.functions_schema import *
+from functions.get_files_info import get_files_info
+from functions.get_file_content import get_file_content
+from functions.write_file import write_file
+from functions.run_python import run_python_file
 
 def main():
     load_dotenv()
@@ -44,6 +47,7 @@ def generate_content(client, messages, verbose):
     - Write or overwrite files
 
     All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
+    When using the function 'get_files_info', you can access the root directory above the working directory.
     """
     
     available_functions = types.Tool(
@@ -70,8 +74,11 @@ def generate_content(client, messages, verbose):
     print(f"Response:\n{response.text}")
     if response.function_calls:
         for function_call_part in response.function_calls:
-            print(f"Calling function: {function_call_part.name}({function_call_part.args})")
-
+            function_call_result = call_function(function_call_part,verbose=verbose)
+            if not function_call_result.parts[0].function_response.response:
+                raise Exception("Did not receive a function response.")
+            if verbose == True:
+                print(f"-> {function_call_result.parts[0].function_response.response}")
     
 
 def call_function(function_call_part, verbose=False):
@@ -80,8 +87,33 @@ def call_function(function_call_part, verbose=False):
     else:
         print(f" - Calling function: {function_call_part.name}")
 
+    function_map = {
+        "get_files_info": get_files_info,
+        "get_file_content": get_file_content,
+        "write_file": write_file,
+        "run_python_file": run_python_file,
+        "working_directory": './calculator'
+    }
+
+    call_args = dict(function_call_part.args)  # make a copy of the args
+    call_args['working_directory'] = './calculator'
+
+    function_name = function_call_part.name
     
-    
+    if function_name in function_map:
+        function_result = function_map[function_name](**call_args)
+    else:
+        raise Exception("Unknown function name")
+
+    return types.Content(
+        role="tool",
+        parts=[
+            types.Part.from_function_response(
+                name=function_name,
+                response={"result": function_result},
+            )
+        ],
+    )
 
 
 if __name__ == "__main__":
